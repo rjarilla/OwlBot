@@ -205,7 +205,7 @@ async function sendMessage() {
   showTyping();
 
   try {
-    const res = await fetch("http://localhost:3000/quiz", {
+    const res = await fetch("/quiz", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
