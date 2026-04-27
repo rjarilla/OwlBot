@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OwlBot Chat</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111;
+      --bot: #e0edff;
+      --user: #1e3a8a;
+      --gold: gold;
+    }
+
+    body.dark {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e5e7eb;
+      --bot: #334155;
+      --user: #2563eb;
+      --gold: #facc15;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: 0.3s;
+    }
+
+    .chat-container {
+      max-width: 420px;
+      height: 90vh;
+      margin: 20px auto;
+      background: var(--card);
+      display: flex;
+      flex-direction: column;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .owl {
+      width: 40px;
+      height: 40px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 75%;
+    }
+
+    .bot {
+      background: var(--bot);
+      align-self: flex-start;
+    }
+
+    .user {
+      background: var(--user);
+      color: white;
+      align-self: flex-end;
+    }
+
+    .typing {
+      font-style: italic;
+      opacity: 0.7;
+    }
+
+    .input-area {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+    }
+    
+    textarea { width: 100%; height: 150px; }
+
+    button {
+      background: var(--gold);
+      border: none;
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .toggle {
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .answer { display: none; color: green; }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="header">
+    <div class="header-left">
+      <div class="owl"><img src="img/owlbot.png" alt="OwlBot" height="40" width="40"/></div>
+      <div>
+        <strong>OwlBot - Your Personal Tutor</strong><br>
+        <small>Your AI Study Companion</small>
+      </div>
+    </div>
+    <div class="toggle" onclick="toggleDark()">🌙</div>
+  </div>
+  <div class="input-area">
+    <textarea id="input" placeholder="Paste your notes here..." rows="3"></textarea>
+  </div>
+  <div class="button-area" style="padding: 10px; display: flex; gap: 10px;">
+    <button onclick="sendMessage()">Generate Quiz</button>
+    <button onclick="sendMessage()">Reveal Answers</button>  
+  </div>
+  <div class="owlBotStatus" id="owlBotStatus"></div> 
+  <div class="quizDiv" id="quizDiv"></div>
+
+ 
+</div>
+
+<script>
+const messagesDiv = document.getElementById("messages");
+
+// Load history
+window.onload = () => {
+
+};
+
+// Save history
+function saveMessage(text, type) {
+}
+
+// Add message to UI
+function addMessage(text, type) {
+   const quizDiv = document.getElementById("quiz");
+   messagesDiv.innerHTML = "";
+    data.questions.forEach((q, i) => {
+      quizDiv.innerHTML += `
+        <p><b>Q${i+1}:</b> ${q.question}</p>
+        <p class="answer"><b>Answer:</b> ${q.answer}</p>
+      `;
+    });
+}
+
+// Typing indicator
+function showTyping() {
+  const typing = document.createElement("owlBotStatus");
+  typing.className = "message bot typing";
+  typing.id = "typing";
+  typing.innerText = "OwlBot is thinking...";
+}
+
+function removeTyping() {
+  const t = document.getElementById("owlBotStatus");
+  if (t) { t.innerHTML = ""(); }
+}
+
+// Send message
+async function sendMessage() {
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  /**addMessage(text, "user");
+  saveMessage(text, "user");**/
+  input.value = "";
+
+  showTyping();
+
+  try {
+    const res = await fetch("http://localhost:3000/quiz", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    removeTyping();
+    addMessage(data.reply, "bot");
+   // saveMessage(data.reply, "bot");
+
+  } catch (err) {
+    removeTyping();
+    const typing = document.createElement("owlBotStatus");
+    typing.className = "message bot typing";
+    typing.id = "typing";
+    typing.innerText = "⚠️ Connection error...";
+  }
+}
+
+// Dark mode toggle
+function toggleDark() {
+  document.body.classList.toggle("dark");
+}
+
+
+ 
+function toggleAnswers() {
+  const answers = document.querySelectorAll(".answer");
+  answers.forEach(a => {
+    a.style.display = a.style.display === "none" ? "block" : "none";
+  });
+}
+
+</script>
+
+</body>
+</html>
